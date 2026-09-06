@@ -1,9 +1,10 @@
 # leveldisplay
 
-A minimalist, Apple-style statusline for [Claude Code](https://code.claude.com) that shows **how hard the session is thinking** and **how much of your 5-hour usage window is gone** — in a single animated line.
+A minimalist, Apple-style statusline for [Claude Code](https://code.claude.com) that shows **how hard the session is thinking**, **how full the context window is**, **what it is working on right now** and **how much of your 5-hour usage window is gone** — in one animated line, plus a second line while it works.
 
 ```
-fable · ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱ cooking · usage ▰▰▰▰▱▱▱▱▱▱ 42%
+fable · ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱ cooking · ctx ▰▰▰▰▱▱▱▱▱▱ 42% · usage ▰▰▰▰▱▱▱▱▱▱ 42%
+▸ Agent: review the auth module ▰▰▰▱▱ 3/5 · ~4m left
 ```
 
 Single file. Zero dependencies. No build step. Just Node.
@@ -15,7 +16,9 @@ Single file. Zero dependencies. No build step. Just Node.
 | `fable` | Current model name |
 | 32-cell animated bar | **Thinking intensity** (0–100), derived live from the session transcript |
 | silly word | Intensity tier in plain words: `snoozing` → `noodling` → `tinkering` → `cooking` → `ultracoding` |
+| `ctx` bar + `%` | **Context window fill** (green → amber at 70% → red at 85%), from Claude Code's own `used_percentage` |
 | `usage` bar + `%` | Your 5-hour rate-limit window (blue → amber at 75% → red at 90%) |
+| `▸ …` second line | **What it is doing right now** with progress and a rough ETA — only shown while something is running |
 
 ### How intensity is measured
 
@@ -32,6 +35,16 @@ The score decays once the session has been idle for 2 minutes.
 At intensity ≥ 80 the bar switches to the **authentic ultracode ripple** — the violet ring animation from Claude Code's `/effort` picker, reverse-engineered from the official binary: an 8-step background ramp `rgb(62,22,118) → rgb(140,80,240)`, banded by a radial raised-cosine with a 20-column wavelength, rings rolling outward from the bar's center, glyphs in lavender `#d0b4ff`. The travel speed is adapted to the statusline's ~300 ms repaint cadence so the rings drift smoothly instead of strobing.
 
 Below 80 the filled cells shimmer through a purple → pink → orange gradient whose phase drifts with time.
+
+### The second line
+
+While the session is busy, a second line shows what it is working on. It is read from the tail of the transcript (last 512 KB) with a three-tier fallback:
+
+1. **Task list progress** — `▸ <current task> ▰▰▰▱▱ 3/5 · ~4m left`, ETA from the completion rate so far.
+2. **Running subagents or workflows** — `▸ <what they do> 2/4 · ~6m left`, ETA from the median runtime of the ones already finished.
+3. **Current tool call** — `▸ <tool description> · 35s`, only if it started within the last 45 seconds.
+
+If none applies the line disappears. Every ETA is a `~` linear estimate, never a promise.
 
 ## Install
 
@@ -80,7 +93,7 @@ Then tell Claude Code: *"install leveldisplay"* — the skill edits your `settin
   ```
 
 - Word pools rotate every 90 s; tweak the `WORDS` arrays to taste.
-- Bar width: `FOCUS_WIDTH` (intensity, default 32) and the `width = 10` default in `usageBar`.
+- Bar width: `FOCUS_WIDTH` (intensity, default 32) and the `width = 10` defaults in `contextBar` / `usageBar`.
 
 ## License
 

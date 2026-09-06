@@ -1,11 +1,11 @@
 ---
 name: leveldisplay
-description: Install or configure the leveldisplay statusline for Claude Code (animated thinking-intensity bar + 5h usage bar). Use when the user asks to install, enable, update, or troubleshoot leveldisplay, or wants a statusline showing usage and thinking level.
+description: Install or configure the leveldisplay statusline for Claude Code (animated thinking-intensity bar, context-window bar, 5h usage bar, and a second line showing the current task with progress and ETA). Use when the user asks to install, enable, update, or troubleshoot leveldisplay, or wants a statusline showing usage, context and thinking level.
 ---
 
 # leveldisplay — install skill
 
-leveldisplay is a single-file, zero-dependency Node statusline (`leveldisplay.mjs`). Installing it means wiring it into the user's `~/.claude/settings.json` under the `statusLine` key. Statuslines cannot be shipped as plugin components, so this skill performs the settings edit.
+leveldisplay is a single-file, zero-dependency Node statusline (`leveldisplay.mjs`): line 1 = model · intensity bar · context bar · usage bar; line 2 (only while busy) = current task · progress · ETA. Installing it means wiring it into the user's `~/.claude/settings.json` under the `statusLine` key. Statuslines cannot be shipped as plugin components, so this skill performs the settings edit.
 
 ## Steps
 
