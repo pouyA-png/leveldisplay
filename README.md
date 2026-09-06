@@ -98,3 +98,106 @@ Then tell Claude Code: *"install leveldisplay"* — the skill edits your `settin
 ## License
 
 MIT
+
+## Option for Codex
+
+Codex users can run the same gradient bars, violet ripple and activity words in a
+**companion terminal**, alongside Codex CLI or the Codex desktop app. This option
+reads Codex's local session logs; the Claude statusline stays independent.
+
+Illustrative display:
+
+```text
+gpt-6-astra (high) · ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ burrowing · ctx ~▰▰▰▱▱▱▱▱▱▱ 28% · 7d ▰▱▱▱▱▱▱▱▱▱ 12%
+▸ running tools · 2/4 steps · 1 agent
+```
+
+### Install
+
+Requires Node ≥ 18.3 and a local Codex installation. No npm packages, API keys or
+additional model calls. From this repository:
+
+```sh
+node leveldisplay-codex.mjs --install
+leveldisplay-codex --open             # macOS: opens an animated Terminal companion
+```
+
+On Linux, WSL, or in an existing separate terminal/pane:
+
+```sh
+leveldisplay-codex --watch
+```
+
+The installer creates `~/.local/bin/leveldisplay-codex`, referencing this checkout
+and the exact Node executable used for installation. Keep the checkout in place
+and ensure `~/.local/bin` is on `PATH`. Updates take effect when the display restarts.
+
+It also adds this **native Codex CLI footer**, validated with `codex features list`:
+
+```toml
+[tui]
+status_line = ["model-with-reasoning", "context-used", "five-hour-limit", "weekly-limit", "run-state", "task-progress"]
+```
+
+Existing custom footers and configs containing TOML multiline strings are preserved
+without modification. Other settings—including model, reasoning, permissions,
+authentication and MCP servers—are preserved. Before changing config, the installer
+saves a local backup at `~/.codex/leveldisplay/config.before.toml`. Failed Codex
+validation restores the original configuration. Restart Codex CLI for its native
+footer to refresh; the companion can attach to an already-running session.
+
+**Display boundary:** Codex's supported [`tui.status_line` setting](https://developers.openai.com/codex/config-reference/#tui-status_line)
+accepts built-in item identifiers, not arbitrary rendering commands. The native
+footer therefore shows Codex's own metrics. The animated artwork lives in the
+companion terminal. This does not inject a footer into the desktop chat interface,
+patch Codex, or write over its terminal UI.
+
+### Session selection and metrics
+
+```sh
+leveldisplay-codex --session THREAD_ID --watch  # pin a thread
+leveldisplay-codex --file /path/to/rollout.jsonl --once
+leveldisplay-codex --latest --watch            # explicitly follow latest parent session
+leveldisplay-codex --json                      # inspect sanitized metrics
+```
+
+- An explicit session/file takes priority. Otherwise `CODEX_THREAD_ID` or
+  `CODEX_SESSION_ID` pins the invoking Codex session. Outside Codex, the newest
+  parent session is selected and remains pinned until restart. Subagent sessions
+  are excluded from automatic selection. `--latest` deliberately allows switching.
+- Model and reasoning effort come from recorded turn settings, not hard-coded names.
+- Activity uses the same 16-minute tool-call/output-token/agent heuristic as the
+  Claude version. It is **activity, not intelligence or measured thinking depth**.
+  It decays during silence and returns to zero on completed/aborted turns.
+- Agent counts use explicit spawn/completion events, with a 30-minute stale guard.
+  Undocumented or missing lifecycle events can make this best-effort count lag.
+- `ctx ~` estimates context used from the last request's total tokens divided by
+  its reported context-window size. It is not cumulative billing and may differ
+  from Codex's native footer around compaction.
+- Usage uses the actual reported `window_minutes`: `5h`, `7d`, or another duration.
+  Missing data shows `usage —`. Expired windows are marked `(stale)` until Codex
+  reports new usage; the companion never calls an account endpoint.
+- The second line shows safe tool categories and explicit plan progress. No invented
+  completion percentage or ETA. Commands, prompts, results and reasoning text are
+  never displayed. Logs are read locally and never modified or uploaded.
+- The screen refreshes every 300 ms; logs are parsed incrementally. Long metric
+  rows wrap at metric boundaries. Press **q** or **Ctrl+C** to restore the terminal.
+
+`--home` / `CODEX_HOME` selects a different Codex directory; `--bin-dir` changes
+the install directory. `--no-color` / `NO_COLOR` disables color; piped snapshots
+are plain text automatically. Run `--help` for all options.
+
+### Test and remove
+
+```sh
+node --test test/codex.test.mjs
+python3 test/codex-pty.py              # optional POSIX terminal integration test
+```
+
+Tests use synthetic logs under ignored `.scratch/`; no real transcripts enter the
+repository. Tested against local Codex 0.153.4 logs on macOS arm64 with Node 24.
+Session JSONL is a best-effort local interface and may change between Codex versions.
+
+To remove: quit the companion, delete `~/.local/bin/leveldisplay-codex`, and remove
+the added `status_line` assignment from `~/.codex/config.toml` if desired. Do not
+restore an old whole-file backup over newer configuration changes.
