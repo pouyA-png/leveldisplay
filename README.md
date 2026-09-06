@@ -101,6 +101,13 @@ MIT
 
 ## Option for Codex
 
+**Want the bars inside Codex's own footer?** Use the
+[native-footer option](codex/native/README.md): a tested custom build of Codex CLI
+0.153.4 for macOS arm64. It requires restarting Codex after installation, and npm
+upgrades replace the patch.
+
+### Companion option (no custom Codex build)
+
 Codex users can run the same gradient bars, violet ripple and activity words in a
 **companion terminal**, alongside Codex CLI or the Codex desktop app. This option
 reads Codex's local session logs; the Claude statusline stays independent.
@@ -146,7 +153,7 @@ saves a local backup at `~/.codex/leveldisplay/config.before.toml`. Failed Codex
 validation restores the original configuration. Restart Codex CLI for its native
 footer to refresh; the companion can attach to an already-running session.
 
-**Display boundary:** Codex's supported [`tui.status_line` setting](https://developers.openai.com/codex/config-reference/#tui-status_line)
+**Stock Codex display boundary:** Codex's supported [`tui.status_line` setting](https://developers.openai.com/codex/config-reference/#tui-status_line)
 accepts built-in item identifiers, not arbitrary rendering commands. The native
 footer therefore shows Codex's own metrics. The animated artwork lives in the
 companion terminal. This does not inject a footer into the desktop chat interface,

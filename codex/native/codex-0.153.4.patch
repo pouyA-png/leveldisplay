@@ -1,0 +1,62 @@
+diff --git a/codex-rs/tui/src/bottom_pane/mod.rs b/codex-rs/tui/src/bottom_pane/mod.rs
+index f4caf92..0856617 100644
+--- a/codex-rs/tui/src/bottom_pane/mod.rs
++++ b/codex-rs/tui/src/bottom_pane/mod.rs
+@@ -62,6 +62,7 @@ mod app_link_view;
+ mod apply_patch_header;
+ mod approval_overlay;
+ mod hook_status;
++pub(crate) mod leveldisplay;
+ mod mcp_server_elicitation;
+ mod multi_select_picker;
+ mod request_user_input;
+diff --git a/codex-rs/tui/src/chatwidget.rs b/codex-rs/tui/src/chatwidget.rs
+index 40eadfa..d47b3d5 100644
+--- a/codex-rs/tui/src/chatwidget.rs
++++ b/codex-rs/tui/src/chatwidget.rs
+@@ -1219,6 +1219,13 @@ impl ChatWidget {
+         }
+         self.refresh_status_line_if_workspace_headline_due();
+         self.refresh_thread_usage_if_settlement_due();
++        if crate::bottom_pane::leveldisplay::enabled() && self.config.animations {
++            self.refresh_status_line();
++            if self.bottom_pane.is_task_running() {
++                self.frame_requester
++                    .schedule_frame_in(std::time::Duration::from_millis(300));
++            }
++        }
+     }
+ 
+     fn flush_active_cell(&mut self) {
+diff --git a/codex-rs/tui/src/chatwidget/status_surfaces.rs b/codex-rs/tui/src/chatwidget/status_surfaces.rs
+index e79c0d3..88762a5 100644
+--- a/codex-rs/tui/src/chatwidget/status_surfaces.rs
++++ b/codex-rs/tui/src/chatwidget/status_surfaces.rs
+@@ -213,10 +213,23 @@ impl ChatWidget {
+             }
+         }
+ 
+-        self.set_status_line(status_line_from_segments(
+-            segments,
+-            self.config.tui_status_line_use_colors,
+-        ));
++        let line = if crate::bottom_pane::leveldisplay::enabled() {
++            let millis = if self.config.animations {
++                self.terminal_title_animation_origin.elapsed().as_millis()
++            } else {
++                0
++            };
++            let columns = crossterm::terminal::size().map_or(120, |(width, _)| width);
++            crate::bottom_pane::leveldisplay::render(
++                segments,
++                self.config.tui_status_line_use_colors,
++                millis,
++                columns,
++            )
++        } else {
++            status_line_from_segments(segments, self.config.tui_status_line_use_colors)
++        };
++        self.set_status_line(line);
+         let hyperlink_url = selections
+             .status_line_items
+             .contains(&StatusLineItem::PullRequestNumber)
